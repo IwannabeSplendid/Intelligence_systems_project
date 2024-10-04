@@ -77,6 +77,41 @@ def runTest():
 
 #-------------------------------------------------------------------------------- 
 
+
+def runFineTune()
+    pathDirData = './database'
+    pathFileTrain = './dataset/fine-tune.txt'
+    pathFileVal = './dataset/val_2.txt'
+    pathFileTest = './dataset/test_2.txt'
+    
+    nnArchitecture = 'DENSE-NET-121'
+    classes = [
+        'Atelectasis', 'Cardiomegaly', 'Pleural effusion', 'Pericardial effusion', 
+        'Infiltrates', 'Alveolar pattern', 'Interstitial pattern', 
+        'Reticular interstitial pattern', 'Pulmonary mass', 'Soft tissue mass', 
+        'Nodule', 'Pseudonodule', 'Pneumonia', 'Consolidation', 
+        'Pulmonary edema', 'Emphysema', 'Pulmonary fibrosis', 
+        'Apical pleural thickening', 'Hiatal hernia', 'Pulmonary hypertension', 
+        'Granuloma', 'Respiratory distress', 'Heart insufficiency', 'Tuberculosis', 
+        'COPD signs', 'Bullas', 'Kyphosis', 'Scoliosis', 'Goiter', 'Vertebral fracture', 
+        'Vertebral degenerative changes', 'Laminar atelectasis', 'Pulmonary artery enlargement'
+    ]
+    nnIsTrained = True
+    nnClassCount = len(classes)
+    
+    trBatchSize = 8
+    trMaxEpoch = 100
+    
+    imgtransResize = 256
+    imgtransCrop = 224
+    
+    pathModel = './models/m-25012018-123527.pth.tar'
+    
+    timestampLaunch = ''
+    
+    ChexnetTrainer.fine_tune(pathDirData, pathFileTrain, pathFileVal, nnArchitecture, nnIsTrained, nnClassCount, trBatchSize, trMaxEpoch, imgtransResize, imgtransCrop, pathModel, timestampLaunch)
+
+
 if __name__ == '__main__':
     main()
 
