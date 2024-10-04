@@ -78,7 +78,7 @@ def runTest():
 #-------------------------------------------------------------------------------- 
 
 
-def runFineTune()
+def runFineTune():
     pathDirData = './database'
     pathFileTrain = './dataset/fine-tune.txt'
     pathFileVal = './dataset/val_2.txt'
