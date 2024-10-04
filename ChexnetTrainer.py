@@ -257,6 +257,82 @@ class ChexnetTrainer ():
         
      
         return
+
+
+    #-------------------------------------------------------------------------------- 
+
+    def fine_tune(pathDirData, pathFileTrain, pathFileVal, nnArchitecture, nnIsTrained, nnClassCount, trBatchSize, trMaxEpoch, transResize, transCrop, launchTimestamp, checkpoint=None, learningRate=1e-4):
+    
+        #-------------------- SETTINGS: NETWORK ARCHITECTURE
+        if nnArchitecture == 'DENSE-NET-121': model = DenseNet121(nnClassCount, nnIsTrained).to(device)
+        elif nnArchitecture == 'DENSE-NET-169': model = DenseNet169(nnClassCount, nnIsTrained).to(device)
+        elif nnArchitecture == 'DENSE-NET-201': model = DenseNet201(nnClassCount, nnIsTrained).to(device)
+        
+        model = torch.nn.DataParallel(model).to(device)
+        
+        #-------------------- FREEZE LAYERS
+        for param in model.parameters():
+            param.requires_grad = False
+
+        #-------------------- UNFREEZE THE LAYERS
+        for param in model.module.classifier.parameters(): #TODO
+            param.requires_grad = True
+
+        #-------------------- SETTINGS: DATA TRANSFORMS
+        normalize = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+
+        transformList = [
+            transforms.RandomResizedCrop(transCrop),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            normalize
+        ]
+        transformSequence = transforms.Compose(transformList)
+
+        #-------------------- SETTINGS: DATASET BUILDERS
+        datasetTrain = DatasetGenerator(pathImageDirectory=pathDirData, pathDatasetFile=pathFileTrain, transform=transformSequence)
+        datasetVal = DatasetGenerator(pathImageDirectory=pathDirData, pathDatasetFile=pathFileVal, transform=transformSequence)
+        
+        dataLoaderTrain = DataLoader(dataset=datasetTrain, batch_size=trBatchSize, shuffle=True, num_workers=0, pin_memory=True)
+        dataLoaderVal = DataLoader(dataset=datasetVal, batch_size=trBatchSize, shuffle=False, num_workers=0, pin_memory=True)
+        
+        #-------------------- SETTINGS: OPTIMIZER & SCHEDULER
+        optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=learningRate, betas=(0.9, 0.999), eps=1e-08, weight_decay=1e-5)
+        scheduler = ReduceLROnPlateau(optimizer, factor=0.1, patience=5, mode='min')
+        
+        #-------------------- SETTINGS: LOSS
+        loss = torch.nn.BCELoss(size_average=True)
+        
+        #---- Load checkpoint
+        if checkpoint is not None:
+            modelCheckpoint = torch.load(checkpoint, map_location=torch.device(device))
+            state_dict = fix_state_dict_keys(modelCheckpoint['state_dict'])
+            model.load_state_dict(state_dict)
+            optimizer.load_state_dict(modelCheckpoint['optimizer'])
+        
+        #---- TRAIN THE NETWORK
+        lossMIN = 100000
+        for epochID in range(trMaxEpoch):
+            timestampTime = time.strftime("%H%M%S")
+            timestampDate = time.strftime("%d%m%Y")
+            timestampSTART = timestampDate + '-' + timestampTime
+            
+            ChexnetTrainer.epochTrain(model, dataLoaderTrain, optimizer, scheduler, trMaxEpoch, nnClassCount, loss)
+            lossVal, losstensor = ChexnetTrainer.epochVal(model, dataLoaderVal, optimizer, scheduler, trMaxEpoch, nnClassCount, loss)
+            
+            timestampTime = time.strftime("%H%M%S")
+            timestampDate = time.strftime("%d%m%Y")
+            timestampEND = timestampDate + '-' + timestampTime
+            
+            scheduler.step(losstensor.data[0])
+            
+            if lossVal < lossMIN:
+                lossMIN = lossVal    
+                torch.save({'epoch': epochID + 1, 'state_dict': model.state_dict(), 'best_loss': lossMIN, 'optimizer': optimizer.state_dict()}, 'm-' + launchTimestamp + '.pth.tar')
+                print(f'Epoch [{epochID + 1}] [save] [{timestampEND}] loss= {lossVal}')
+            else:
+                print(f'Epoch [{epochID + 1}] [----] [{timestampEND}] loss= {lossVal}')
+
 #-------------------------------------------------------------------------------- 
 
 
