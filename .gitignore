@@ -2,3 +2,6 @@
 database/*
 .DS_Store
 fine_tune_dataset/*
+pycache/*
+__pycache__/*
+*.pyc

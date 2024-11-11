@@ -9,8 +9,9 @@ from ChexnetTrainer import ChexnetTrainer
 
 def main ():
     
-    runTest()
-    #runTrain()
+    # runTest()
+    # runTrain()
+    runFineTune()
   
 #--------------------------------------------------------------------------------   
 
@@ -61,15 +62,15 @@ def runTrain():
 def runTest():
     
     pathDirData = './database'
-    pathFileTest = './dataset/test_1.txt'
+    pathFileTest = './dataset/test_b.txt'
     nnArchitecture = 'DENSE-NET-121'
     nnIsTrained = True
-    nnClassCount = 14
+    nnClassCount = 34
     trBatchSize = 8
     imgtransResize = 256
     imgtransCrop = 224
     
-    pathModel = './models/m-25012018-123527.pth.tar'
+    pathModel = './models/m-25012024-123527.pth.tar'
     
     timestampLaunch = ''
     
@@ -80,9 +81,9 @@ def runTest():
 
 def runFineTune():
     pathDirData = './database'
-    pathFileTrain = './dataset/fine-tune.txt'
-    pathFileVal = './dataset/val_2.txt'
-    pathFileTest = './dataset/test_2.txt'
+    pathFileTrain = './dataset/train_b.txt'
+    pathFileVal = './dataset/val_b.txt'
+    pathFileTest = './dataset/test_b.txt'
     
     nnArchitecture = 'DENSE-NET-121'
     classes = [
@@ -94,11 +95,10 @@ def runFineTune():
         'Apical pleural thickening', 'Hiatal hernia', 'Pulmonary hypertension', 
         'Granuloma', 'Respiratory distress', 'Heart insufficiency', 'Tuberculosis', 
         'COPD signs', 'Bullas', 'Kyphosis', 'Scoliosis', 'Goiter', 'Vertebral fracture', 
-        'Vertebral degenerative changes', 'Laminar atelectasis', 'Pulmonary artery enlargement'
+        'Vertebral degenerative changes', 'Laminar atelectasis', 'Pulmonary artery enlargement', 'Normal'
     ]
     nnIsTrained = True
     nnClassCount = len(classes)
-    
     trBatchSize = 8
     trMaxEpoch = 100
     
@@ -107,9 +107,9 @@ def runFineTune():
     
     pathModel = './models/m-25012018-123527.pth.tar'
     
-    timestampLaunch = ''
+    timestampLaunch = '25012018-123527'
     
-    ChexnetTrainer.fine_tune(pathDirData, pathFileTrain, pathFileVal, nnArchitecture, nnIsTrained, nnClassCount, trBatchSize, trMaxEpoch, imgtransResize, imgtransCrop, pathModel, timestampLaunch)
+    ChexnetTrainer.fine_tune(pathModel, pathDirData, pathFileTrain, pathFileVal, nnArchitecture, nnIsTrained, nnClassCount, trBatchSize, trMaxEpoch, imgtransResize, imgtransCrop, timestampLaunch)
 
 
 if __name__ == '__main__':
